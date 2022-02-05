@@ -72,15 +72,23 @@ fun main(args: Array<String>) = runBlocking {
         override fun paintImage(panel: WebcamPanel, image: BufferedImage, g2: Graphics2D) {
             val imageToUse = if (testImage != null) ImageIO.read(File(testImage)) else image
 
-//            val targetingOutput = process(Color.GREEN, imageToUse){r,g,b->
-//                r > 85 && r > b + 55 && r > g + 55
-//            }
-            val targetingOutput = process(Color.GREEN, imageToUse){r,g,b->
+            // Lets You Pick what team you are on "red" or "blue"
+            var targetingOutput = process(Color.GREEN, imageToUse){r,g,b->
+                r==r && g==g && b==b
+            };
+            val teamColor = "red"
+            if (teamColor == "blue"){
+             targetingOutput = process(Color.GREEN, imageToUse){ r, g, b->
                 b > 65 && b > r + 35 && b > g + 35
             }
-
+            }else if(teamColor == "red") {
+             targetingOutput = process(Color.GREEN, imageToUse){r,g,b->
+                r>85 && r > b + 55 && r > g + 55
+                }
+            }
 
             // pull out results we care about, let web server serve them as quick as possible
+
             imageInfo.seen = targetingOutput.seen
             imageInfo.center = targetingOutput.targetCenter
             imageInfo.distance = min(1000.0, targetingOutput.targetDistanceInches)
@@ -162,6 +170,7 @@ fun fullSend() {
 //val pixelRange = 0..
 
 fun process(targetColor: Color, inputImage: BufferedImage,isColor:(r:Int,g:Int,b:Int)->Boolean): TargetingOutput {
+
 
     val outputImage = BufferedImage(
         inputImage.width, inputImage.height,
