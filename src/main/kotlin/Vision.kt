@@ -177,7 +177,7 @@ fun process(targetColor: Color, inputImage: BufferedImage,isColor:(r:Int,g:Int,b
         BufferedImage.TYPE_INT_RGB
     )
 
-    val pixelRange = ((0.2 * inputImage.height).toInt())..((0.9 * inputImage.height).toInt())
+    val pixelRange = ((0 * inputImage.height).toInt())..((.9 * inputImage.height).toInt())
 
     var xSum = 0.0
     var ySum = 0.0
@@ -218,6 +218,8 @@ fun process(targetColor: Color, inputImage: BufferedImage,isColor:(r:Int,g:Int,b
     var pixelSize = 0
     var rightExtension = inputImage.width
     var leftExtension = inputImage.width
+    var topExtension = inputImage.height
+    var bottomExetenstion = inputImage.height
 
     if (totalCount <= 50) {
         xCenter = inputImage.width / 2
