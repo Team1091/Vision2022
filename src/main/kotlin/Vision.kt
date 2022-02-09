@@ -9,6 +9,8 @@ import spark.Spark.exception
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics2D
+import java.awt.event.KeyEvent
+import java.awt.event.KeyListener
 import java.awt.image.BufferedImage
 import java.io.File
 import java.lang.Double.min
@@ -26,6 +28,30 @@ private val imageInfo = ImageInfo()
 private val testImage: String? = null // "test.png"
 private val robotAddr = "http://roborio-1091-frc.local" // "http://localhost"//
 var remote = false
+var teamColor = "blue"
+
+class Toggle : KeyListener{
+    override fun keyTyped(e: KeyEvent?){
+
+    }
+
+    override fun keyPressed(e: KeyEvent?) {
+        if (e == null){
+            return;
+        }
+
+        if(e.keyCode == KeyEvent.VK_B){
+            teamColor = "blue";
+        } else if (e.keyCode == KeyEvent.VK_R){
+            teamColor = "red";
+        }
+    }
+
+    override fun keyReleased(e: KeyEvent?) {
+
+    }
+}
+
 fun main(args: Array<String>) = runBlocking {
     var webcam: Webcam? = null
     var connected = false;
@@ -73,17 +99,17 @@ fun main(args: Array<String>) = runBlocking {
             val imageToUse = if (testImage != null) ImageIO.read(File(testImage)) else image
 
             // Lets You Pick what team you are on "red" or "blue"
-            var targetingOutput = process(Color.GREEN, imageToUse){r,g,b->
-                r==r && g==g && b==b
-            };
-            val teamColor = "red"
-            if (teamColor == "blue"){
-             targetingOutput = process(Color.GREEN, imageToUse){ r, g, b->
-                b > 65 && b > r + 35 && b > g + 35
+            var targetingOutput = process(Color.GREEN, imageToUse) { r, g, b ->
+                r == r && g == g && b == b
             }
-            }else if(teamColor == "red") {
-             targetingOutput = process(Color.GREEN, imageToUse){r,g,b->
-                r>85 && r > b + 55 && r > g + 55
+
+            if (teamColor == "blue") {
+                targetingOutput = process(Color.GREEN, imageToUse) { r, g, b ->
+                    b > 75 && b > r + 45 && b > g + 45
+                }
+            } else if (teamColor == "red") {
+                targetingOutput = process(Color.GREEN, imageToUse) { r, g, b ->
+                    r > 95 && r > b + 65 && r > g + 65
                 }
             }
 
@@ -138,6 +164,8 @@ fun main(args: Array<String>) = runBlocking {
     window.pack()
     window.isVisible = true
 
+    window.addKeyListener(Toggle())
+
     // handle exceptions by just printing them out
     exception(Exception::class.java) { exception, request, response -> exception.printStackTrace() }
 
@@ -169,7 +197,11 @@ fun fullSend() {
 
 //val pixelRange = 0..
 
-fun process(targetColor: Color, inputImage: BufferedImage,isColor:(r:Int,g:Int,b:Int)->Boolean): TargetingOutput {
+fun process(
+    targetColor: Color,
+    inputImage: BufferedImage,
+    isColor: (r: Int, g: Int, b: Int) -> Boolean
+): TargetingOutput {
 
 
     val outputImage = BufferedImage(
@@ -198,7 +230,7 @@ fun process(targetColor: Color, inputImage: BufferedImage,isColor:(r:Int,g:Int,b
             val g = rgb shr 8 and 0x000000FF
             val b = rgb and 0x000000FF
 
-            if (isColor(r,g,b)) {
+            if (isColor(r, g, b)) {
                 outputImage.setRGB(x, y, targetColor.rgb)
                 xSum += x * xMult
                 ySum += y * xMult
@@ -328,6 +360,8 @@ class TargetingOutput(
             // width labels, px and % screen width
             g.color = Color.BLUE
             g.drawString(df.format(targetDistanceInches) + " Inches", 10, 10)
+            val distance = 547.0*Math.pow((leftExtension+rightExtension).toDouble(),-1.08)
+            g.drawString(distance.toString(),10,30)
         }
 
         return outputImage
