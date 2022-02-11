@@ -1,10 +1,12 @@
+//import kotlinx.coroutines.runBlocking
 import com.github.sarxos.webcam.Webcam
 import com.github.sarxos.webcam.WebcamPanel
 import com.github.sarxos.webcam.ds.ipcam.IpCamDeviceRegistry
 import com.github.sarxos.webcam.ds.ipcam.IpCamDriver
 import com.github.sarxos.webcam.ds.ipcam.IpCamMode
+import edu.wpi.first.networktables.NetworkTableEntry
+import edu.wpi.first.networktables.NetworkTableInstance
 import kotlinx.coroutines.runBlocking
-//import kotlinx.coroutines.runBlocking
 import spark.Spark.exception
 import java.awt.Color
 import java.awt.Dimension
@@ -15,7 +17,6 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.lang.Double.min
 import java.lang.Thread.sleep
-import java.net.URL
 import java.text.DecimalFormat
 import javax.imageio.ImageIO
 import javax.swing.JFrame
@@ -30,19 +31,23 @@ private val robotAddr = "http://roborio-1091-frc.local" // "http://localhost"//
 var remote = false
 var teamColor = "blue"
 
-class Toggle : KeyListener{
-    override fun keyTyped(e: KeyEvent?){
+var seenEntry: NetworkTableEntry? = null
+var centerEntry: NetworkTableEntry? = null
+var distanceEntry: NetworkTableEntry? = null
+
+class Toggle : KeyListener {
+    override fun keyTyped(e: KeyEvent?) {
 
     }
 
     override fun keyPressed(e: KeyEvent?) {
-        if (e == null){
+        if (e == null) {
             return;
         }
 
-        if(e.keyCode == KeyEvent.VK_B){
+        if (e.keyCode == KeyEvent.VK_B) {
             teamColor = "blue";
-        } else if (e.keyCode == KeyEvent.VK_R){
+        } else if (e.keyCode == KeyEvent.VK_R) {
             teamColor = "red";
         }
     }
@@ -169,6 +174,13 @@ fun main(args: Array<String>) = runBlocking {
     // handle exceptions by just printing them out
     exception(Exception::class.java) { exception, request, response -> exception.printStackTrace() }
 
+    val inst = NetworkTableInstance.getDefault()
+    val table = inst.getTable("datatable")
+
+    seenEntry = table.getEntry("seen")
+    centerEntry = table.getEntry("center")
+    distanceEntry = table.getEntry("distance")
+
     // a little webserver.  Go to http://localhost:4567/center
 
 //    port(5801)
@@ -187,11 +199,20 @@ fun main(args: Array<String>) = runBlocking {
 }
 
 fun fullSend() {
+
     if (remote) {
-        run {
-            //if its new,
-            URL("$robotAddr:5801/center?seen=${imageInfo.seen}&distance=${imageInfo.distance}&center=${imageInfo.center}").readText()
-        }
+
+        seenEntry?.setBoolean(imageInfo.seen)
+        centerEntry?.setDouble( imageInfo.center)
+        distanceEntry?.setDouble(imageInfo.distance)
+
+
+
+//        table.putValue()
+        //run {
+        //if its new,
+        //URL("$robotAddr:5801/center?seen=${imageInfo.seen}&distance=${imageInfo.distance}&center=${imageInfo.center}").readText()
+        //
     }
 }
 
@@ -360,8 +381,8 @@ class TargetingOutput(
             // width labels, px and % screen width
             g.color = Color.BLUE
             g.drawString(df.format(targetDistanceInches) + " Inches", 10, 10)
-            val distance = 547.0*Math.pow((leftExtension+rightExtension).toDouble(),-1.08)
-            g.drawString(distance.toString(),10,30)
+            val distance = 547.0 * Math.pow((leftExtension + rightExtension).toDouble(), -1.08)
+            g.drawString(distance.toString(), 10, 30)
         }
 
         return outputImage

@@ -11,7 +11,7 @@ mainClassName = "VisionKt"
 
 repositories {
     mavenCentral()
-    mavenCentral()
+    maven { url "https://frcmaven.wpi.edu/artifactory/release/" }
 }
 
 dependencies {
@@ -22,6 +22,19 @@ dependencies {
     implementation "com.github.sarxos:webcam-capture:0.3.12"
     implementation "com.github.sarxos:webcam-capture-driver-ipcam:0.3.12"
     implementation "com.sparkjava:spark-core:2.7.1"
+    // Add ntcore-java
+    implementation "edu.wpi.first.ntcore:ntcore-java:2022.3.1"
+
+    // Add wpiutil-java
+    implementation "edu.wpi.first.wpiutil:wpiutil-java:2022.3.1"
+
+    // Add ntcore-jni for runtime. We are adding all supported platforms
+    // so that our application will work on all supported platforms.
+    implementation "edu.wpi.first.ntcore:ntcore-jni:2022.3.1:windowsx86"
+    implementation "edu.wpi.first.ntcore:ntcore-jni:2022.3.1:windowsx86-64"
+    implementation "edu.wpi.first.ntcore:ntcore-jni:2022.3.1:linuxx86-64"
+    implementation "edu.wpi.first.ntcore:ntcore-jni:2022.3.1:linuxraspbian"
+    implementation "edu.wpi.first.ntcore:ntcore-jni:2022.3.1:osxx86-64"
 
 }
 
