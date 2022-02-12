@@ -24,7 +24,7 @@ import javax.swing.WindowConstants
 import kotlin.math.abs
 
 
-private val imageInfo = ImageInfo()
+private var imageInfo = ImageInfo()
 
 private val testImage: String? = null // "test.png"
 private val robotAddr = "http://roborio-1091-frc.local" // "http://localhost"//
@@ -32,7 +32,8 @@ var remote = false
 var teamColor = "blue"
 
 var seenEntry: NetworkTableEntry? = null
-var centerEntry: NetworkTableEntry? = null
+var centerXEntry: NetworkTableEntry? = null
+var centerYEntry: NetworkTableEntry? = null
 var distanceEntry: NetworkTableEntry? = null
 
 class Toggle : KeyListener {
@@ -119,10 +120,13 @@ fun main(args: Array<String>) = runBlocking {
             }
 
             // pull out results we care about, let web server serve them as quick as possible
+            imageInfo = ImageInfo(
+                seen = targetingOutput.seen,
+                centerX = targetingOutput.targetXCenter,
+                centerY = targetingOutput.targetYCenter,
+                distance = min(1000.0, targetingOutput.targetDistanceInches)
+            )
 
-            imageInfo.seen = targetingOutput.seen
-            imageInfo.center = targetingOutput.targetCenter
-            imageInfo.distance = min(1000.0, targetingOutput.targetDistanceInches)
 
             fullSend()
 
@@ -178,7 +182,8 @@ fun main(args: Array<String>) = runBlocking {
     val table = inst.getTable("datatable")
 
     seenEntry = table.getEntry("seen")
-    centerEntry = table.getEntry("center")
+    centerXEntry = table.getEntry("centerX")
+    centerYEntry = table.getEntry("centerY")
     distanceEntry = table.getEntry("distance")
 
     // a little webserver.  Go to http://localhost:4567/center
@@ -203,9 +208,9 @@ fun fullSend() {
     if (remote) {
 
         seenEntry?.setBoolean(imageInfo.seen)
-        centerEntry?.setDouble( imageInfo.center)
+        centerXEntry?.setDouble(imageInfo.centerX)
+        centerYEntry?.setDouble(imageInfo.centerY)
         distanceEntry?.setDouble(imageInfo.distance)
-
 
 
 //        table.putValue()
@@ -308,8 +313,8 @@ fun process(
     * distance(mm) = (focal length (mm) * real height of the object (mm) * camera frame height in device (pixels) ) / ( image height (pixels) * sensor height (mm))
     * */
     //In Millimeters - Values for C270 web cam
-    val focalLength = 4.2
-    val targetPhysicalHeight = 279.4 //11in
+  //  val focalLength = 4.2
+  //  val targetPhysicalHeight = 279.4 //11in
     val cameraFrameHeight = inputImage.height
     val cameraSensorHeight = 2.2
     val targetPixelHeight = pixelSize //How to get?
@@ -317,6 +322,7 @@ fun process(
     val xLeft = xCenter - leftExtension
     val xRight = xCenter + rightExtension
     val xCenterAvg = (xLeft + xRight) / 2
+    val distance = 547.0 * Math.pow((leftExtension + rightExtension).toDouble(), -1.08)
 
     return TargetingOutput(
         imageWidth = inputImage.width,
@@ -324,7 +330,8 @@ fun process(
         xCenterColor = xCenter,
         yCenterColor = yCenter,
         xCenterAvg = xCenterAvg,
-        targetDistance = (focalLength * targetPhysicalHeight * cameraFrameHeight) / (targetPixelHeight * cameraSensorHeight),
+        yCenterAvg = yCenter,
+        targetDistance = (distance),
         processedImage = outputImage,
         seen = seen,
         rightExtension = rightExtension,
@@ -338,6 +345,7 @@ class TargetingOutput(
     val xCenterColor: Int,
     val yCenterColor: Int,
     val xCenterAvg: Int,
+    val yCenterAvg: Int,
     var targetDistance: Double,
     val processedImage: BufferedImage,
     val seen: Boolean,
@@ -351,8 +359,11 @@ class TargetingOutput(
      *
      * @return float from -0.5 to 0.5
      */
-    val targetCenter: Double
+    val targetXCenter: Double
         get() = xCenterAvg.toDouble() / imageWidth.toDouble() - 0.5
+
+    val targetYCenter: Double
+        get() = yCenterAvg.toDouble() / imageHeight.toDouble() - 0.5
 
 
     val targetDistanceInches: Double
@@ -393,8 +404,9 @@ class TargetingOutput(
     }
 }
 
-class ImageInfo {
-    var seen = false
-    var center = 0.0
-    var distance = 1000.0
-}
+class ImageInfo(
+    val seen: Boolean = false,
+    val centerX: Double = 0.0,
+    val centerY: Double = 0.0,
+    val distance: Double = 1000.0
+)
