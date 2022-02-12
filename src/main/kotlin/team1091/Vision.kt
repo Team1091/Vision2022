@@ -1,4 +1,5 @@
-//import kotlinx.coroutines.runBlocking
+package team1091
+
 import com.github.sarxos.webcam.Webcam
 import com.github.sarxos.webcam.WebcamPanel
 import com.github.sarxos.webcam.ds.ipcam.IpCamDeviceRegistry
@@ -11,13 +12,10 @@ import spark.Spark.exception
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics2D
-import java.awt.event.KeyEvent
-import java.awt.event.KeyListener
 import java.awt.image.BufferedImage
 import java.io.File
 import java.lang.Double.min
 import java.lang.Thread.sleep
-import java.text.DecimalFormat
 import javax.imageio.ImageIO
 import javax.swing.JFrame
 import javax.swing.WindowConstants
@@ -35,28 +33,6 @@ var seenEntry: NetworkTableEntry? = null
 var centerXEntry: NetworkTableEntry? = null
 var centerYEntry: NetworkTableEntry? = null
 var distanceEntry: NetworkTableEntry? = null
-
-class Toggle : KeyListener {
-    override fun keyTyped(e: KeyEvent?) {
-
-    }
-
-    override fun keyPressed(e: KeyEvent?) {
-        if (e == null) {
-            return;
-        }
-
-        if (e.keyCode == KeyEvent.VK_B) {
-            teamColor = "blue";
-        } else if (e.keyCode == KeyEvent.VK_R) {
-            teamColor = "red";
-        }
-    }
-
-    override fun keyReleased(e: KeyEvent?) {
-
-    }
-}
 
 fun main(args: Array<String>) = runBlocking {
     var webcam: Webcam? = null
@@ -105,16 +81,12 @@ fun main(args: Array<String>) = runBlocking {
             val imageToUse = if (testImage != null) ImageIO.read(File(testImage)) else image
 
             // Lets You Pick what team you are on "red" or "blue"
-            var targetingOutput = process(Color.GREEN, imageToUse) { r, g, b ->
-                r == r && g == g && b == b
-            }
-
-            if (teamColor == "blue") {
-                targetingOutput = process(Color.GREEN, imageToUse) { r, g, b ->
+            val targetingOutput = if (teamColor == "blue") {
+                 process(Color.GREEN, imageToUse) { r, g, b ->
                     b > 75 && b > r + 45 && b > g + 45
                 }
-            } else if (teamColor == "red") {
-                targetingOutput = process(Color.GREEN, imageToUse) { r, g, b ->
+            } else { // red
+                 process(Color.GREEN, imageToUse) { r, g, b ->
                     r > 95 && r > b + 65 && r > g + 65
                 }
             }
@@ -173,7 +145,7 @@ fun main(args: Array<String>) = runBlocking {
     window.pack()
     window.isVisible = true
 
-    window.addKeyListener(Toggle())
+    window.addKeyListener(ToggleColor())
 
     // handle exceptions by just printing them out
     exception(Exception::class.java) { exception, request, response -> exception.printStackTrace() }
@@ -338,75 +310,3 @@ fun process(
         leftExtension = leftExtension
     )
 }
-
-class TargetingOutput(
-    val imageWidth: Int,
-    val imageHeight: Int,
-    val xCenterColor: Int,
-    val yCenterColor: Int,
-    val xCenterAvg: Int,
-    val yCenterAvg: Int,
-    var targetDistance: Double,
-    val processedImage: BufferedImage,
-    val seen: Boolean,
-    val rightExtension: Int,
-    val leftExtension: Int
-) {
-
-
-    /**
-     * Get the center as a fraction of total image width
-     *
-     * @return float from -0.5 to 0.5
-     */
-    val targetXCenter: Double
-        get() = xCenterAvg.toDouble() / imageWidth.toDouble() - 0.5
-
-    val targetYCenter: Double
-        get() = yCenterAvg.toDouble() / imageHeight.toDouble() - 0.5
-
-
-    val targetDistanceInches: Double
-        get() = targetDistance / 25.4
-
-    /**
-     * This draws debug info onto the image before it's displayed.
-     *
-     * @param outputImage
-     * @return
-     */
-    fun drawOntoImage(drawColor: Color, outputImage: BufferedImage): BufferedImage {
-
-        val g = outputImage.createGraphics()
-
-        g.color = drawColor
-        g.drawLine(xCenterColor, yCenterColor - 10, xCenterColor, yCenterColor + 10)
-
-        g.color = Color.ORANGE
-        g.drawLine(xCenterAvg, yCenterColor - 5, xCenterAvg, yCenterColor + 5)
-
-        if (seen) {
-            g.color = Color.YELLOW
-            g.drawLine(xCenterColor - leftExtension, yCenterColor, xCenterColor + rightExtension, yCenterColor)
-
-            // width labels, px and % screen width
-            g.color = Color.BLUE
-            g.drawString(df.format(targetDistanceInches) + " Inches", 10, 10)
-            val distance = 547.0 * Math.pow((leftExtension + rightExtension).toDouble(), -1.08)
-            g.drawString(distance.toString(), 10, 30)
-        }
-
-        return outputImage
-    }
-
-    companion object {
-        private val df = DecimalFormat("#.0")
-    }
-}
-
-class ImageInfo(
-    val seen: Boolean = false,
-    val centerX: Double = 0.0,
-    val centerY: Double = 0.0,
-    val distance: Double = 1000.0
-)
