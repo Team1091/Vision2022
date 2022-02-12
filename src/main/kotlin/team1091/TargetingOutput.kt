@@ -3,6 +3,7 @@ package team1091
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.text.DecimalFormat
+import kotlin.math.pow
 
 class TargetingOutput(
     val imageWidth: Int,
@@ -57,7 +58,7 @@ class TargetingOutput(
             // width labels, px and % screen width
             g.color = Color.BLUE
             g.drawString(df.format(targetDistanceInches) + " Inches", 10, 10)
-            val distance = 547.0 * Math.pow((leftExtension + rightExtension).toDouble(), -1.08)
+            val distance = 547.0 * (leftExtension + rightExtension).toDouble().pow(-1.08)
             g.drawString(distance.toString(), 10, 30)
         }
 

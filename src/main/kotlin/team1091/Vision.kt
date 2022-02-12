@@ -20,12 +20,13 @@ import javax.imageio.ImageIO
 import javax.swing.JFrame
 import javax.swing.WindowConstants
 import kotlin.math.abs
+import kotlin.math.pow
 
 
 private var imageInfo = ImageInfo()
 
 private val testImage: String? = null // "test.png"
-private val robotAddr = "http://roborio-1091-frc.local" // "http://localhost"//
+private const val robotAddr = "http://roborio-1091-frc.local" // "http://localhost"//
 var remote = false
 var teamColor = "blue"
 
@@ -36,14 +37,14 @@ var distanceEntry: NetworkTableEntry? = null
 
 fun main(args: Array<String>) = runBlocking {
     var webcam: Webcam? = null
-    var connected = false;
+    var connected = false
     while (!connected) {
         try {
 
             if (args.size != 1) {
                 remote = true
                 Webcam.setDriver(IpCamDriver())
-                var checkServer = IpCamDeviceRegistry.register("RoboRioCamTest", "$robotAddr", IpCamMode.PUSH)
+                val checkServer = IpCamDeviceRegistry.register("RoboRioCamTest", robotAddr, IpCamMode.PUSH)
                 while (!checkServer.isOnline) {
                     println("Waiting on Server")
                     sleep(250)
@@ -207,7 +208,7 @@ fun process(
         BufferedImage.TYPE_INT_RGB
     )
 
-    val pixelRange = ((0 * inputImage.height).toInt())..((.9 * inputImage.height).toInt())
+    val pixelRange = ((0.1 * inputImage.height).toInt())..((.9 * inputImage.height).toInt())
 
     var xSum = 0.0
     var ySum = 0.0
@@ -241,7 +242,7 @@ fun process(
     }
 
 
-    var xCenter: Int
+    val xCenter: Int
     val yCenter: Int
 
     var seen = false
@@ -249,7 +250,7 @@ fun process(
     var rightExtension = inputImage.width
     var leftExtension = inputImage.width
     var topExtension = inputImage.height
-    var bottomExetenstion = inputImage.height
+    var bottomExtension = inputImage.height
 
     if (totalCount <= 50) {
         xCenter = inputImage.width / 2
@@ -284,7 +285,7 @@ fun process(
     /*
     * distance(mm) = (focal length (mm) * real height of the object (mm) * camera frame height in device (pixels) ) / ( image height (pixels) * sensor height (mm))
     * */
-    //In Millimeters - Values for C270 web cam
+    //In Millimeters - Values for C270 webcam
   //  val focalLength = 4.2
   //  val targetPhysicalHeight = 279.4 //11in
     val cameraFrameHeight = inputImage.height
@@ -294,7 +295,7 @@ fun process(
     val xLeft = xCenter - leftExtension
     val xRight = xCenter + rightExtension
     val xCenterAvg = (xLeft + xRight) / 2
-    val distance = 547.0 * Math.pow((leftExtension + rightExtension).toDouble(), -1.08)
+    val distance = 547.0 * (leftExtension + rightExtension).toDouble().pow(-1.08)
 
     return TargetingOutput(
         imageWidth = inputImage.width,

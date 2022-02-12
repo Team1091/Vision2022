@@ -1,6 +1,5 @@
 package team1091
 
-import team1091.teamColor
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 
@@ -11,13 +10,13 @@ class ToggleColor : KeyListener {
 
     override fun keyPressed(e: KeyEvent?) {
         if (e == null) {
-            return;
+            return
         }
 
         if (e.keyCode == KeyEvent.VK_B) {
-            teamColor = "blue";
+            teamColor = "blue"
         } else if (e.keyCode == KeyEvent.VK_R) {
-            teamColor = "red";
+            teamColor = "red"
         }
     }
 
