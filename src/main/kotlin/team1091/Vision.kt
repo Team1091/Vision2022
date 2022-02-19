@@ -22,7 +22,7 @@ import kotlin.math.abs
 import kotlin.math.pow
 
 private val testImage: String? = null // "test.png"
-private const val robotAddr = "http://roborio-1091-frc.local" // "http://localhost"//
+private const val robotAddr = "http://10.10.91.2" //"http://roborio-1091-frc.local" // "http://localhost"//
 var isRemote = false
 var teamColor = "blue"
 
@@ -135,7 +135,6 @@ private fun getPainter() = object : WebcamPanel.Painter {
 private fun connect(): Webcam? {
     var webcam: Webcam? = null
     try {
-
         if (isRemote) {
             Webcam.setDriver(IpCamDriver())
             val checkServer = IpCamDeviceRegistry.register("RoboRioCamTest", robotAddr, IpCamMode.PUSH)
@@ -151,7 +150,7 @@ private fun connect(): Webcam? {
             .map { it.name }
             .forEachIndexed { i, cam -> println("$i: $cam") }
 
-        webcam = webcams.first()
+        webcam = webcams.last()
         webcam.setCustomViewSizes(Dimension(640, 480))
         webcam.viewSize = Dimension(640, 480)
         webcam.open();
